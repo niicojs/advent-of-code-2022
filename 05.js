@@ -21,8 +21,6 @@ const nbPiles = indexes.at(-1);
 const stacks = {};
 for (let i = 1; i <= nbPiles; i++) stacks[i] = [];
 
-console.log(piles);
-
 for (const p of piles) {
   p.forEach((val, idx) => {
     if (val) {
@@ -32,7 +30,8 @@ for (const p of piles) {
 }
 
 console.log(drawing);
-console.log(stacks);
+
+const stacks2 = JSON.parse(JSON.stringify(stacks));
 
 const moves = movesLines.split(/\r?\n/).map((move) =>
   move
@@ -41,20 +40,28 @@ const moves = movesLines.split(/\r?\n/).map((move) =>
     .map((m) => +m)
 );
 
-// follow moves
+// follow moves v1
 
 for (const [nb, from, to] of moves) {
-  // console.log(`move ${nb} from ${from} to ${to}`);
   for (let i = 0; i < nb; i++) {
     const crate = stacks[from].shift();
     stacks[to].unshift(crate);
   }
-  // console.log(stacks);
 }
 
-let result = '';
-for (let i = 1; i <= nbPiles; i++) result += stacks[i][0] || '';
+let result1 = '';
+for (let i = 1; i <= nbPiles; i++) result1 += stacks[i][0] || '?';
 
-// console.log(stacks);
+console.log('(answer 1)', result1);
 
-console.log(result);
+// follow move v2
+
+for (const [nb, from, to] of moves) {
+  const crates = stacks2[from].splice(0, nb);
+  stacks2[to].splice(0, 0, ...crates);
+}
+
+let result2 = '';
+for (let i = 1; i <= nbPiles; i++) result2 += stacks2[i][0] || '?';
+
+console.log('(answer 2)', result2);
