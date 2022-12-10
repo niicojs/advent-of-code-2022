@@ -2,12 +2,16 @@ import fs from 'fs/promises';
 
 const lines = (await fs.readFile('inputs/07', 'utf8')).split(/\r?\n/g);
 
-const sizes = {};
+const sizes = { '/': 0 };
 const addSize = (path, size) => {
-  const subs = path.split('/');
-  for (let i = 0; i < subs.length; i++) {
-    const dir = subs.slice(0, i + 1).join('/') || '/';
-    sizes[dir] = (sizes[dir] || 0) + size;
+  if (path === '/') {
+    sizes['/'] += size;
+  } else {
+    const subs = path.split('/');
+    for (let i = 0; i < subs.length; i++) {
+      const dir = subs.slice(0, i + 1).join('/') || '/';
+      sizes[dir] = (sizes[dir] || 0) + size;
+    }
   }
 };
 
@@ -49,3 +53,15 @@ for (const path in sizes) {
 }
 
 console.log('(answer 1)', sum);
+
+const missing = 30_000_000 - (70_000_000 - sizes['/']);
+
+console.log('missing', missing);
+
+const candidates = Object.keys(sizes)
+  .filter((dir) => sizes[dir] >= missing)
+  .sort((a, b) => sizes[a] - sizes[b]);
+
+console.log('candidates', candidates);
+
+console.log('(answer 2)', sizes[candidates[0]]);
