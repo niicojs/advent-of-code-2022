@@ -48,3 +48,48 @@ for (let y = 1; y < height - 1; y++) {
 }
 
 console.log('(answer 1)', visible);
+
+const canSee = (from, x, y) => {
+  let see = 1;
+  const h = grid[y][x];
+  if (from === 'left') {
+    for (let i = x - 1; i > 0; i--) {
+      if (grid[y][i] < h) see++;
+      else break;
+    }
+  } else if (from === 'right') {
+    for (let i = x + 1; i < width - 1; i++) {
+      if (grid[y][i] < h) see++;
+      else break;
+    }
+  } else if (from === 'top') {
+    for (let j = y - 1; j > 0; j--) {
+      if (grid[j][x] < h) see++;
+      else break;
+    }
+  } else if (from === 'bottom') {
+    for (let j = y + 1; j < height - 1; j++) {
+      if (grid[j][x] < h) see++;
+      else break;
+    }
+  }
+  return see;
+};
+
+const getScore = (x, y) => {
+  return (
+    canSee('top', x, y) *
+    canSee('left', x, y) *
+    canSee('right', x, y) *
+    canSee('bottom', x, y)
+  );
+};
+
+let highscore = 0;
+for (let y = 1; y < height - 1; y++) {
+  for (let x = 1; x < width - 1; x++) {
+    highscore = Math.max(highscore, getScore(x, y));
+  }
+}
+
+console.log('(answer 2)', highscore);
