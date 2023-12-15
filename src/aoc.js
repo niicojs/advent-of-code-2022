@@ -12,9 +12,9 @@ export async function submit({ year, day, level, answer }) {
   if (existsSync('incorrect.json')) {
     incorrect = JSON.parse(readFileSync('incorrect.json', 'utf-8'));
   }
-  const wrong = incorrect[`${day}-${level}`] || [];
-  if (wrong.includes(answer)) {
-    consola.error('Réponse incorrect et déjà envoyée.');
+  const wrong = incorrect[`${day}-${level}`] || {};
+  if (wrong[answer]) {
+    consola.error('Réponse incorrect et déjà envoyée : ' + wrong[answer]);
     return false;
   }
 
@@ -45,24 +45,24 @@ export async function submit({ year, day, level, answer }) {
     }
     return false;
   } else if (response.includes('not the right answer')) {
-    wrong.push(answer);
+    if (response.includes('too high')) {
+      consola.error('Réponse trop élevée.');
+      wrong[answer] = 'trop élevé';
+    } else if (response.includes('too low')) {
+      consola.error('Réponse trop basse.');
+      wrong[answer] = 'trop bas';
+    } else {
+      consola.error('Réponse incorrect.');
+      wrong[answer] = 'incorrect';
+    }
+
     incorrect[`${day}-${level}`] = wrong;
     writeFileSync(
       'incorrect.json',
       JSON.stringify(incorrect, null, 2),
       'utf-8'
     );
-
-    if (response.includes('too high')) {
-      consola.error('Réponse trop élevée.');
-      return false;
-    } else if (response.includes('too low')) {
-      consola.error('Réponse trop basse.');
-      return true;
-    } else {
-      consola.error('Réponse incorrect.');
-      return false;
-    }
+    return false;
   } else if (response.includes("That's the right answer!")) {
     consola.success('Bonne réponse !');
     return true;

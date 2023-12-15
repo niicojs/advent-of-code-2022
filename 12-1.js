@@ -1,13 +1,11 @@
 import { config } from 'dotenv';
 import { consola } from 'consola';
 import {
-  deepEqual,
   directNeighbors,
   getCurrentDay,
   getDataLines,
   getGrid,
   inGridRange,
-  memoize,
 } from './src/utils.js';
 import { submit } from './src/aoc.js';
 
@@ -46,7 +44,7 @@ const print = (path) => {
       } else if (end[0] === x && end[1] === y) {
         line += 'E';
       } else if (path.some(([a, b]) => a === x && b === y)) {
-        line += '\x1b[33m' + grid[y][x] + '\x1b[0m';
+        line += '\x1b[33m' + '#' + '\x1b[0m';
       } else {
         line += '.';
       }
@@ -55,57 +53,54 @@ const print = (path) => {
   }
 };
 
-// print([]);
-
 consola.log('start', start);
 consola.log('end', end);
 
 const good = [];
+const done = new Map();
 
-let idx = 0;
-const dig = memoize((path) => {
-  idx++;
-  if (idx >= 500) {
-    print(path);
-    idx = 0;
-  }
-  let [x, y] = path.at(-1);
-  for (const [i, j] of directNeighbors) {
-    const next = [x + i, y + j];
-    if (inGridRange(grid, x + i, y + j)) {
-      const val = grid[next[1]][next[0]];
-      const canMove = val - grid[y][x] < 2;
-      if (canMove) {
-        if (next[0] === end[0] && next[1] === end[1]) {
-          // exit
-          good.push([...path, next]);
-        } else if (!path.some(([a, b]) => a === next[0] && b === next[1])) {
-          const exists = good.findIndex((p) =>
-            p.find(([a, b]) => a === next[0] && b === next[1])
+const dig = (start) => {
+  const todo = [[start]];
+  while (todo.length > 0) {
+    const path = todo.shift();
+    const [x, y] = path.at(-1);
+    const possible = directNeighbors
+      .map(([i, j]) => [x + i, y + j])
+      .filter(
+        ([a, b]) => inGridRange(grid, a, b) && grid[b][a] - grid[y][x] < 2
+      );
+    for (const next of possible) {
+      const dir = JSON.stringify([[x, y], next]);
+      if (next[0] === end[0] && next[1] === end[1]) {
+        // exit
+        good.push([...path, next]);
+        return;
+      } else if (!path.some(([a, b]) => a === next[0] && b === next[1])) {
+        const exists = good.findIndex((p) =>
+          p.find(([a, b]) => a === next[0] && b === next[1])
+        );
+        if (exists >= 0) {
+          // been there already
+          const idx = good[exists].findIndex(
+            ([a, b]) => a === next[0] && b === next[1]
           );
-          if (exists >= 0) {
-            // been there already
-            const idx = good[exists].findIndex(
-              ([a, b]) => a === next[0] && b === next[1]
-            );
-            if (idx > path.length) {
-              // we found a better path
-              good[exists] = [...path, ...good[exists].slice(idx)];
-            }
-          } else {
-            // dig deeper
-            dig([...path, next]);
+          if (idx > path.length) {
+            // we found a better path
+            good[exists] = [...path, ...good[exists].slice(idx)];
           }
+        } else if (!done.has(dir)) {
+          // dig deeper
+          todo.push([...path, next]);
         }
       }
+      done.set(dir, true);
     }
   }
-});
+};
 
-dig([start]);
+dig(start);
 good.sort((a, b) => a.length - b.length);
 
-consola.log(good[0]);
 print(good[0]);
 
 consola.warn('part 1', good[0].length - 1);
