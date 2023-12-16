@@ -142,3 +142,17 @@ export function memoize(func, resolver = (...args) => JSON.stringify(args)) {
     return result;
   };
 }
+
+export function mergeRanges(ranges) {
+  ranges.sort(([min1], [min2]) => min1 - min2);
+  const merged = [ranges[0]];
+  for (const [min, max] of ranges.slice(1)) {
+    const last = merged[merged.length - 1];
+    if (min <= last[1] + 1) {
+      last[1] = Math.max(max, last[1]);
+    } else {
+      merged.push([min, max]);
+    }
+  }
+  return merged;
+}
