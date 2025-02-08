@@ -1,6 +1,6 @@
 # [advent-of-code-2022](https://adventofcode.com/)
 
-[Edit on StackBlitz ⚡️](https://stackblitz.com/edit/node-ziubkb)
+Lost a bit switching between machines...
 
 | Day | Ok  |
 | --- | --- |
@@ -14,7 +14,10 @@
 | 08  | ✅  |
 | 09  | ✅  |
 | 10  | ✅  |
-| 11  | \*  |
-| 12  |     |
-| 13  |     |
-| 14  |     |
+| 11  | ✅  |
+| 12  | ✅  |
+| 13  | ✅  |
+| 14  | ✅  |
+| 15  | ✅  |
+| 16  |   |
+| 17  |   |
