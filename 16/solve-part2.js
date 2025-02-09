@@ -22,6 +22,11 @@ for (const line of getDataLines()) {
     valves.get(v).push([dest, 1]);
   }
 }
+const all = new Set(
+  Array.from(rates.entries())
+    .filter(([, v]) => v > 0)
+    .map(([k]) => k)
+);
 
 function search(start, end) {
   const todo = new TinyQueue(
@@ -53,37 +58,57 @@ for (const v1 of valves.keys()) {
   }
 }
 
-let max = 0;
+const cache = new Map();
 
-function findbestpressure() {
+function findbestpressure(only = null) {
+  let k = null;
+  if (only) {
+    k = Array.from(only).sort().join(',');
+    if (cache.has(k)) return cache.get(k);
+  }
   const todo = new TinyQueue(
-    [{ pos: 'AA', score: 0, time: 30, opened: new Set() }],
+    [{ pos: 'AA', score: 0, time: 26, opened: new Set() }],
     (a, b) => b.score - a.score
   );
+  let max = 0;
   while (todo.length > 0) {
     const { pos, score, time, opened } = todo.pop();
 
-    if (score > max) max = score;
-    if (time <= 1 || opened.size === valves.size) continue;
+    if (time <= 1 || opened.size === all.size) continue;
 
     const rate = rates.get(pos);
 
+    const newscore = score + rate * (time - 1);
+    if (newscore > max) max = newscore;
+    const updated = new Set(opened).add(pos);
+
+    if (only === null) {
+      if (updated.size > (2 / 3) * all.size) continue;
+      if (updated.size > (1 / 3) * all.size) {
+        const others = all.difference(updated);
+        const elephantscore = findbestpressure(others);
+        if (newscore + elephantscore > max) max = newscore + elephantscore;
+      }
+    }
+
     for (const [to, dist] of valves.get(pos)) {
       if (time - dist <= 0) continue;
-      if (rates.get(to) === 0) continue;
+      if (!all.has(to)) continue;
       if (opened.has(to)) continue;
+      if (only && !only.has(to)) continue;
       todo.push({
         pos: to,
-        score: score + rate * (time - 1),
+        score: newscore,
         time: time - (rate > 0 ? dist + 1 : dist),
-        opened: new Set(opened).add(pos),
+        opened: updated,
       });
     }
   }
+  if (k) cache.set(k, max);
+  return max;
 }
 
-findbestpressure();
-let answer = max;
+let answer = findbestpressure();
 
 consola.success('result', answer);
 consola.success('Done in', t.format());

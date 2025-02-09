@@ -53,37 +53,39 @@ for (const v1 of valves.keys()) {
   }
 }
 
-let max = 0;
-
 function findbestpressure() {
   const todo = new TinyQueue(
     [{ pos: 'AA', score: 0, time: 30, opened: new Set() }],
     (a, b) => b.score - a.score
   );
+  let max = 0;
   while (todo.length > 0) {
     const { pos, score, time, opened } = todo.pop();
 
-    if (score > max) max = score;
     if (time <= 1 || opened.size === valves.size) continue;
 
     const rate = rates.get(pos);
 
+    const newscore = score + rate * (time - 1);
+    if (newscore > max) max = newscore;
+
+    const updated = new Set(opened).add(pos);
     for (const [to, dist] of valves.get(pos)) {
       if (time - dist <= 0) continue;
       if (rates.get(to) === 0) continue;
       if (opened.has(to)) continue;
       todo.push({
         pos: to,
-        score: score + rate * (time - 1),
+        score: newscore,
         time: time - (rate > 0 ? dist + 1 : dist),
-        opened: new Set(opened).add(pos),
+        opened: updated,
       });
     }
   }
+  return max;
 }
 
-findbestpressure();
-let answer = max;
+let answer = findbestpressure();
 
 consola.success('result', answer);
 consola.success('Done in', t.format());
